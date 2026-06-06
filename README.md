@@ -273,3 +273,13 @@ This assessment successfully demonstrated the progression from restricted user a
 ⚠️ Disclaimer
 This project was conducted exclusively within an isolated laboratory environment for educational, research, and defensive security training purposes. No production systems, third-party infrastructure, or unauthorized targets were involved.
 
+
+## ✍️ Author
+
+Abhay
+
+- 🔴 Red Team Operations
+- 🛡️ Detection Engineering
+- 🧠 Threat Hunting
+- ⚡ Offensive Security Research
+
