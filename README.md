@@ -1,6 +1,6 @@
 # AN0NYM0US-INDIA-Internship
 
-# 🛡️ Windows 7 Privilege Escalation & Persistence Assessment
+## 🛡️ Windows 7 Privilege Escalation & Persistence Assessment
 🔴 **Red Team Post-Exploitation Lab** | 🔐 **Privilege Escalation** | 🎯 **Persistence Engineering**
 
 A complete security assessment of a legacy Windows 7 environment focused on persistence mechanisms, privilege boundaries, User Account Control (UAC) bypass concepts, and post-exploitation troubleshooting.
