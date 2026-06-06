@@ -42,17 +42,30 @@ Generated executable used for callback validation.
 ### Execution Flow
 ```
 User Login
-↓
+    │
+    ▼
 launch.vbs
-↓
+    │
+    ▼
 test.bat
-↓
+    │
+    ▼
 payload.exe
-↓
+    │
+    ▼
 Assessment Listener
 ```
 Learning Outcome
 
 This phase demonstrated how startup folder permissions can influence persistence opportunities within Windows environments.
+
+## ✍️ Author
+
+Abhay
+
+- 🔴 Red Team Operations
+- 🛡️ Detection Engineering
+- 🧠 Threat Hunting
+- ⚡ Offensive Security Research
 
 
