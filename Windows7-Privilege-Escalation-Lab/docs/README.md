@@ -23,3 +23,6 @@ Abhay
 - 🛡️ Detection Engineering
 - 🧠 Threat Hunting
 - ⚡ Offensive Security Research
+
+---
+📆 2026
