@@ -59,6 +59,7 @@ Learning Outcome
 
 This phase demonstrated how startup folder permissions can influence persistence opportunities within Windows environments.
 
+---
 ## ✍️ Author
 
 Abhay
@@ -68,4 +69,6 @@ Abhay
 - 🧠 Threat Hunting
 - ⚡ Offensive Security Research
 
+---
+📆 2026
 
